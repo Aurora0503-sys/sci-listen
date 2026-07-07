@@ -134,21 +134,22 @@ def generate_meeting_summary(text):
 
 @app.route('/')
 def index():
-    """根路径 - 返回 index.html 前端页面"""
-    try:
-        # 直接用 open 读取文件
-        with open('index.html', 'r', encoding='utf-8') as f:
-            return f.read()
-    except Exception as e:
-        return jsonify({
-            'message': '智能会议助手 API 运行正常',
-            'endpoints': [
-                '/api/generate_questions',
-                '/api/answer_question',
-                '/api/health'
-            ],
-            'note': f'无法加载 index.html: {str(e)}'
-        })
+    """根路径 - 返回前端页面"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>智能会议助手</title>
+    </head>
+    <body>
+        <h1>💼 智能会议助手</h1>
+        <p>✅ API 服务器运行正常</p>
+        <p>📡 端点: /api/generate_questions, /api/answer_question, /api/health</p>
+        <p>📖 请访问 <a href="/api/health">/api/health</a> 查看状态</p>
+    </body>
+    </html>
+    """, 200  # 显式返回 200 状态码
 
 
 @app.route('/api/generate_questions', methods=['POST'])
