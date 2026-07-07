@@ -278,3 +278,5 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=5002, debug=False)
     except Exception as e:
         print(f"❌ 启动失败: {e}")
+# 在文件末尾添加这行，确保 Vercel/Railway 能找到 app
+app = app
