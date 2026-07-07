@@ -2,7 +2,6 @@
 name = "sci-listen"
 version = "1.0.0"
 description = "智能会议助手"
-readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "flask",
@@ -13,6 +12,9 @@ dependencies = [
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["api"]
 
 [tool.vercel]
 entrypoint = "api.working_api:app"
