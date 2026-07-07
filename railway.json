@@ -1,27 +1,11 @@
 {
-  "$schema": "https://schema.railpack.com",
   "build": {
-    "steps": {
-      "copy-files": {
-        "inputs": [
-          {
-            "type": "local",
-            "path": "."
-          }
-        ],
-        "commands": [
-          "cp -r . /app/"
-        ]
-      }
-    }
+    "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "gunicorn --bind 0.0.0.0:$PORT api.working_api:app",
-    "inputs": [
-      {
-        "type": "step",
-        "name": "copy-files"
-      }
-    ]
+    "startCommand": "cd /app && gunicorn api.working_api:app",
+    "healthcheckPath": "/api/health",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
   }
 }
