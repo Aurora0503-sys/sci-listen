@@ -1,6 +1,27 @@
 {
   "$schema": "https://schema.railpack.com",
+  "build": {
+    "steps": {
+      "copy-files": {
+        "inputs": [
+          {
+            "type": "local",
+            "path": "."
+          }
+        ],
+        "commands": [
+          "cp -r . /app/"
+        ]
+      }
+    }
+  },
   "deploy": {
-    "startCommand": "gunicorn api.working_api:app"
+    "startCommand": "gunicorn --bind 0.0.0.0:$PORT api.working_api:app",
+    "inputs": [
+      {
+        "type": "step",
+        "name": "copy-files"
+      }
+    ]
   }
 }
