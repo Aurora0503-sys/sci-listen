@@ -134,9 +134,8 @@ def generate_meeting_summary(text):
 
 @app.route('/')
 def index():
-    """根路径 - 返回前端页面"""
+    """根路径 - 返回 index.html 前端页面"""
     try:
-        # 尝试从根目录返回 index.html
         return send_from_directory('.', 'index.html')
     except Exception as e:
         return jsonify({
@@ -146,7 +145,7 @@ def index():
                 '/api/answer_question',
                 '/api/health'
             ],
-            'note': '请访问 /api/health 查看 API 状态'
+            'note': f'无法加载 index.html: {str(e)}'
         })
 
 
