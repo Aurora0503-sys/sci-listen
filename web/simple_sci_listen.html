@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能会议助手</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .header .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+            gap: 0;
+        }
+        
+        .left-panel {
+            flex: 1.2;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            min-width: 0;
+        }
+        
+        .right-panel {
+            flex: 1;
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            overflow-y: auto;
+            background: white;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #1a73e8;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .panel-title .badge {
+            background: #e8f0fe;
+            color: #1a73e8;
+            font-size: 0.75rem;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 400;
+        }
+        
+        .time-display {
+            background: #e8f0fe;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #1a73e8;
+            font-weight: 500;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        
+        button {
+            padding: 0.5rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #1557b0;
+        }
+        
+        .btn-danger {
+            background: #d93025;
+            color: white;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #b71c1c;
+        }
+        
+        .btn-success {
+            background: #34a853;
+            color: white;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #2d8e47;
+        }
+        
+        .btn-warning {
+            background: #fbbc04;
+            color: #333;
+        }
+        .btn-warning:hover:not(:disabled) {
+            background: #f9ab00;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #1a73e8;
+            border: 1px solid #1a73e8;
+        }
+        .btn-outline:hover:not(:disabled) {
+            background: #e8f0fe;
+        }
+        
+        .btn-purple {
+            background: #9c27b0;
+            color: white;
+        }
+        .btn-purple:hover:not(:disabled) {
+            background: #7b1fa2;
+        }
+        
+        .btn-teal {
+            background: #009688;
+            color: white;
+        }
+        .btn-teal:hover:not(:disabled) {
+            background: #00796B;
+        }
+        
+        .btn-sm {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        
+        .btn-recording {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            background: #e8f0fe;
+            border-radius: 8px;
+            padding: 4px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        
+        .mode-selector .mode-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.5rem 0.8rem;
+            border: none;
+            background: transparent;
+            color: #5f6368;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .mode-selector .mode-btn.active {
+            background: #1a73e8;
+            color: white;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+        }
+        
+        .mode-selector .mode-btn:hover:not(.active) {
+            background: #d2e3fc;
+        }
+        
+        .recognition-area {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        
+        .recognition-area .header {
+            padding: 10px 16px;
+            background: #f0f4f8;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .recognition-area .header .label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.85rem;
+        }
+        
+        .recognition-area .header .status-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .recognition-area .header .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-dot.idle { background: #999; }
+        .status-dot.recording { background: #d93025; animation: pulse 1s infinite; }
+        .status-dot.done { background: #34a853; }
+        .status-dot.error { background: #ea4335; }
+        
+        #recognitionText {
+            width: 100%;
+            min-height: 120px;
+            max-height: 250px;
+            padding: 16px;
+            border: none;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #202124;
+            background: white;
+            outline: none;
+        }
+        
+        #recognitionText:focus {
+            background: #fafafa;
+        }
+        
+        #recognitionText::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .recognition-actions {
+            display: flex;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #f8f9fa;
+            border-top: 1px solid #e8eaed;
+            flex-wrap: wrap;
+        }
+        
+        .recognition-actions button {
+            flex: 1;
+            min-width: 80px;
+            justify-content: center;
+            padding: 0.5rem 0.8rem;
+        }
+        
+        .export-audio-actions {
+            display: none;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #f3e5f5;
+            border-top: 1px solid #ce93d8;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .export-audio-actions.show {
+            display: flex;
+        }
+        
+        .export-audio-actions .label {
+            font-size: 0.8rem;
+            color: #6a1b9a;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+        
+        .export-audio-actions button {
+            flex: 0 1 auto;
+            min-width: 80px;
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .interim-hint {
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            color: #888;
+            background: #f8f9fa;
+            border-bottom: 1px dashed #e0e0e0;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .interim-hint .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        #manualInputArea {
+            display: none;
+            margin-bottom: 12px;
+        }
+        
+        #manualInputArea .recognition-area {
+            margin-bottom: 0;
+        }
+        
+        #manualInputArea .recognition-area .header {
+            padding: 10px 16px;
+            background: #f0f4f8;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #manualInputArea .recognition-area .header .label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.85rem;
+        }
+        
+        #manualSummaryInput {
+            width: 100%;
+            min-height: 200px;
+            max-height: 350px;
+            padding: 16px;
+            border: none;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #202124;
+            background: white;
+            outline: none;
+        }
+        
+        #manualSummaryInput:focus {
+            background: #fafafa;
+        }
+        
+        #manualSummaryInput::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        #manualInputArea .recognition-actions {
+            display: flex;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #f8f9fa;
+            border-top: 1px solid #e8eaed;
+            flex-wrap: wrap;
+        }
+        
+        #manualInputArea .recognition-actions button {
+            flex: 1;
+            min-width: 120px;
+            justify-content: center;
+            padding: 0.6rem 1rem;
+        }
+        
+        /* ===== 会议纪要区域 ===== */
+        .summary-area {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-top: 12px;
+            flex-shrink: 0;
+        }
+        
+        .summary-area .header {
+            padding: 10px 16px;
+            background: #e8f5e9;
+            border-bottom: 1px solid #c8e6c9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .summary-area .header .label {
+            font-weight: 600;
+            color: #2e7d32;
+            font-size: 0.85rem;
+        }
+        
+        .summary-area .header .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        #summaryContent {
+            padding: 12px 16px;
+            min-height: 150px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.8;
+            background: #fafffe;
+        }
+        
+        #summaryContent .summary-item {
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            background: #f5faf5;
+            border-radius: 6px;
+            border-left: 3px solid #4CAF50;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        #summaryContent .summary-item:hover {
+            background: #e3f2fd;
+        }
+        
+        #summaryContent .summary-item .item-checkbox {
+            margin-top: 2px;
+            flex-shrink: 0;
+            display: none;
+        }
+        
+        #summaryContent .summary-item .item-checkbox.show {
+            display: block;
+        }
+        
+        #summaryContent .summary-item .item-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        #summaryContent .summary-item .item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        #summaryContent .summary-item .time {
+            font-size: 0.75rem;
+            color: #888;
+            font-weight: 500;
+        }
+        
+        #summaryContent .summary-item .text {
+            margin-top: 4px;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        #summaryContent .summary-item .item-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        
+        #summaryContent .summary-item .item-actions button {
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            border-radius: 4px;
+        }
+        
+        #summaryContent .summary-item .del-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+        }
+        
+        #summaryContent .summary-item .del-btn:hover {
+            color: #f44336;
+        }
+        
+        #summaryContent .empty-state {
+            color: #aaa;
+            font-style: italic;
+            text-align: center;
+            padding: 30px 0;
+        }
+        
+        .editing-indicator {
+            display: inline-block;
+            background: #ff9800;
+            color: white;
+            font-size: 0.6rem;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+        
+        /* ===== 会议列表 ===== */
+        .meeting-list {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 8px 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        
+        .meeting-list .meeting-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .meeting-list .meeting-item .meeting-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            min-width: 0;
+        }
+        
+        .meeting-list .meeting-item .meeting-info .meeting-title {
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .meeting-list .meeting-item .meeting-info .meeting-time {
+            font-size: 0.65rem;
+            color: #888;
+            flex-shrink: 0;
+        }
+        
+        .meeting-list .meeting-item .meeting-info .meeting-badge {
+            background: #1a73e8;
+            color: white;
+            font-size: 0.6rem;
+            padding: 1px 8px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        
+        .meeting-list .meeting-item .meeting-info .meeting-badge.empty {
+            background: #ccc;
+        }
+        
+        .meeting-list .meeting-item.active .meeting-info .meeting-title {
+            color: #1a73e8;
+            font-weight: 600;
+        }
+        
+        .meeting-list .meeting-item .meeting-delete-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .meeting-list .meeting-item .meeting-delete-btn:hover {
+            color: #f44336;
+            background: #fce8e6;
+        }
+        
+        .meeting-list .meeting-item:hover {
+            background: #f5f7fa;
+        }
+        
+        .meeting-list .meeting-item.active {
+            background: #e8f0fe;
+        }
+        
+        .meeting-list .add-meeting-row {
+            display: flex;
+            gap: 6px;
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .meeting-list .add-meeting-row input {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        
+        .meeting-list .add-meeting-row input:focus {
+            border-color: #1a73e8;
+        }
+        
+        .meeting-list .add-meeting-row button {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        
+        .meeting-list .empty-state-small {
+            color: #aaa;
+            font-style: italic;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 10px 0;
+        }
+        
+        /* ===== 会议摘要列表 ===== */
+        .questions-list {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 12px 16px;
+            flex: 1;
+            min-height: 350px;
+            max-height: 70vh;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+        
+        .question-item {
+            background: #f1f8ff;
+            border-left: 4px solid #1a73e8;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            border-radius: 0 6px 6px 0;
+            position: relative;
+        }
+        
+        .question-item .question-text {
+            font-size: 14px;
+            line-height: 1.9;
+            margin-bottom: 10px;
+            padding-right: 60px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .question-item .question-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .question-item .question-actions button {
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        
+        .question-item .q-time {
+            font-size: 0.7rem;
+            color: #888;
+            position: absolute;
+            top: 8px;
+            right: 12px;
+        }
+        
+        .answer-container {
+            margin-top: 8px;
+            padding: 12px 16px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #333;
+            display: none;
+        }
+        
+        .answer-container.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .answer-container .answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+        
+        .answer-container .answer-close {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 4px;
+        }
+        
+        .answer-container .answer-close:hover {
+            color: #f44336;
+        }
+        
+        .answer-container .answer-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .answer-container.loading {
+            border-left-color: #FF9800;
+        }
+        
+        .answer-container.error {
+            border-left-color: #f44336;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .action-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        
+        .action-row button {
+            flex: 1;
+            min-width: 120px;
+            justify-content: center;
+            padding: 0.6rem 1rem;
+        }
+        
+        .status-bar {
+            margin-top: 12px;
+            padding: 0.5rem 1rem;
+            background: #e8f0fe;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #1a73e8;
+            flex-shrink: 0;
+        }
+        
+        .status-bar.error {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .status-bar.success {
+            background: #e6f4ea;
+            color: #1e7e34;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            .left-panel, .right-panel {
+                max-height: 50vh;
+            }
+            .right-panel {
+                padding: 1rem;
+            }
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 4px;
+            }
+            .recognition-actions button {
+                flex: 1 1 100%;
+            }
+            .action-row button {
+                flex: 1 1 100%;
+            }
+            .mode-selector .mode-btn {
+                min-width: 80px;
+                font-size: 0.8rem;
+                padding: 0.4rem 0.5rem;
+            }
+            .export-audio-actions button {
+                flex: 1 1 100%;
+            }
+            #manualInputArea .recognition-actions button {
+                flex: 1 1 100%;
+            }
+            .questions-list {
+                min-height: 200px;
+                max-height: 50vh;
+            }
+            .summary-area #summaryContent {
+                max-height: 200px;
+            }
+            .meeting-list {
+                max-height: 150px;
+            }
+        }
+        
+        .recording-duration {
+            font-size: 0.8rem;
+            color: #d93025;
+            font-weight: 600;
+            display: none;
+        }
+        .recording-duration.show {
+            display: inline;
+        }
+        
+        .btn-speaking {
+            background: #FF5722 !important;
+            color: white !important;
+        }
+        .btn-speaking:hover:not(:disabled) {
+            background: #E64A19 !important;
+        }
+        
+        .export-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .export-modal-overlay.show {
+            display: flex;
+        }
+        
+        .export-modal {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        
+        .export-modal .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a73e8;
+            margin-bottom: 16px;
+        }
+        
+        .export-modal .modal-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        .export-modal .meeting-check-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .export-modal .meeting-check-item:hover {
+            background: #f5f7fa;
+        }
+        
+        .export-modal .meeting-check-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .export-modal .meeting-check-item .check-title {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        .export-modal .meeting-check-item .check-time {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        
+        .export-modal .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: flex-end;
+            border-top: 1px solid #e8eaed;
+            padding-top: 16px;
+        }
+        
+        .export-modal .modal-actions button {
+            padding: 0.5rem 1.5rem;
+        }
+        
+        .export-modal .select-all-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .export-modal .select-all-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .export-modal .select-all-row label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>💼 智能会议助手</h1>
+            <span class="subtitle">语音识别 · AI会议摘要 · 智能会议纪要</span>
+        </div>
+        <div class="time-display" id="currentTime"></div>
+    </div>
+    
+    <div class="container">
+        <!-- ===== 左侧面板 ===== -->
+        <div class="left-panel">
+            <!-- ===== 连接错误提示 ===== -->
+            <div id="connectionError" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:12px; color:#856404; flex-shrink:0;">
+                <div style="font-weight:600; font-size:0.95rem;">⚠️ 无法连接到后端服务</div>
+                <ul style="margin:8px 0 0 20px; font-size:0.85rem; line-height:1.8;">
+                    <li>请确保后端服务已启动：在 <code>api</code> 目录下运行 <code>python working_api.py</code></li>
+                    <li>请使用 <code>http://localhost:8080</code> 访问，不要直接打开文件</li>
+                    <li>检查后端服务是否运行在 <code>http://localhost:5002</code></li>
+                </ul>
+                <button onclick="checkApiConnection()" style="margin-top:8px; padding:4px 16px; background:#ffc107; border:none; border-radius:4px; cursor:pointer; font-weight:500;">🔄 重新连接</button>
+            </div>
+            
+            <!-- ===== 启动检查 ===== -->
+            <div style="background:#e8f0fe; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.85rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0;">
+                <span id="checkApi"><span style="font-size:1rem;">⏳</span> <span style="color:#555;font-size:0.8rem;">后端服务检查中...</span></span>
+                <span id="checkMic"><span style="font-size:1rem;">⏳</span> <span style="color:#555;font-size:0.8rem;">麦克风权限检查中...</span></span>
+            </div>
+            
+            <!-- 模式选择 -->
+            <div class="mode-selector" id="modeSelector">
+                <button class="mode-btn active" data-mode="voice">🎙️ 语音模式</button>
+                <button class="mode-btn" data-mode="manual">✏️ 手动输入</button>
+            </div>
+            
+            <!-- 手动输入区域 -->
+            <div id="manualInputArea">
+                <div class="recognition-area">
+                    <div class="header">
+                        <span class="label">✏️ 手动输入会议内容</span>
+                        <button id="clearManualBtn" class="btn-sm btn-outline">清空</button>
+                    </div>
+                    <textarea 
+                        id="manualSummaryInput" 
+                        placeholder="在此输入或粘贴会议记录、讨论内容..."
+                        rows="8"
+                    ></textarea>
+                    <div class="recognition-actions">
+                        <button id="generateFromManualBtn" class="btn-primary">📋 生成会议摘要</button>
+                        <button id="addManualToSummaryBtn" class="btn-success">📝 添加到会议纪要</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 语音识别区域 -->
+            <div class="recognition-area" id="recognitionArea">
+                <div class="header">
+                    <span class="label">🎙️ 会议语音识别</span>
+                    <div class="status-group">
+                        <span class="status-dot idle" id="statusDot"></span>
+                        <span id="statusLabel" style="font-size:0.8rem;color:#888;">等待开始</span>
+                        <span class="recording-duration" id="recordingDuration">00:00</span>
+                    </div>
+                </div>
+                <div class="interim-hint" id="interimHint">
+                    <span>💡 点击"开始录音"开始会议记录</span>
+                </div>
+                <textarea 
+                    id="recognitionText" 
+                    placeholder="会议语音识别结果将显示在这里，你可以手动编辑修改..."
+                ></textarea>
+                <div class="recognition-actions" id="recognitionActions">
+                    <button id="startBtn" class="btn-primary">🎙️ 开始录音</button>
+                    <button id="stopBtn" class="btn-danger" disabled>⏹️ 停止录音</button>
+                    <button id="clearTextBtn" class="btn-outline btn-sm">🗑️ 清空</button>
+                </div>
+                <div class="export-audio-actions" id="exportAudioActions">
+                    <span class="label">📥 导出会议录音:</span>
+                    <button id="exportWavBtn" class="btn-purple">🎵 导出 WAV</button>
+                    <button id="exportMp3Btn" class="btn-purple">🎵 导出 MP3</button>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="action-row" id="actionRow">
+                <button id="generateFromRecognitionBtn" class="btn-primary">📋 生成会议摘要</button>
+                <button id="addToSummaryBtn" class="btn-success">📝 添加到会议纪要</button>
+            </div>
+            
+            <!-- ===== 会议纪要区域 ===== -->
+            <div class="summary-area">
+                <div class="header">
+                    <span class="label">📋 会议纪要</span>
+                    <div class="header-actions">
+                        <span style="font-size:0.8rem;color:#888;" id="summaryCount">共 0 条</span>
+                        <button id="selectModeBtn" class="btn-sm btn-outline" onclick="toggleSelectMode()">☑️ 选择</button>
+                        <button id="deleteSelectedBtn" class="btn-sm btn-danger" style="display:none;" onclick="deleteSelectedItems()">🗑️ 删除选中</button>
+                    </div>
+                </div>
+                <div id="summaryContent">
+                    <div class="empty-state">还没有会议纪要内容，点击"添加到会议纪要"添加</div>
+                </div>
+            </div>
+            
+            <!-- ===== 会议列表 ===== -->
+            <div class="meeting-list" id="meetingList">
+                <div class="add-meeting-row" id="addMeetingRow">
+                    <input type="text" id="newMeetingName" placeholder="输入新会议名称..." onkeydown="if(event.key==='Enter') addNewMeeting()">
+                    <button class="btn-primary btn-sm" onclick="addNewMeeting()">➕ 添加会议</button>
+                </div>
+                <div id="meetingItemsContainer">
+                    <div class="empty-state-small">暂无会议，请添加</div>
+                </div>
+            </div>
+            
+            <div class="status-bar" id="statusBar">
+                ✅ 就绪
+            </div>
+        </div>
+        
+        <!-- ===== 右侧面板 ===== -->
+        <div class="right-panel">
+            <div class="panel-title">
+                📋 会议摘要
+                <span class="badge" id="questionCount">0</span>
+            </div>
+            
+            <div class="btn-group">
+                <button id="addQuestionBtn" class="btn-primary btn-sm">📝 手动添加摘要</button>
+                <button id="exportBtn" class="btn-success btn-sm" onclick="openExportModal()">📤 导出会议记录</button>
+                <button id="clearQuestionsBtn" class="btn-danger btn-sm">🗑️ 清空摘要</button>
+            </div>
+            
+            <div class="questions-list" id="questionsList">
+                <div class="question-item empty-state" style="border-left-color:#ccc;color:#aaa;text-align:center;padding:30px 0;">
+                    暂无会议摘要，点击"生成会议摘要"
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ===== 导出对话框 ===== -->
+    <div class="export-modal-overlay" id="exportModal">
+        <div class="export-modal">
+            <div class="modal-title">📤 导出会议记录</div>
+            <div class="modal-subtitle">请选择要导出的会议：</div>
+            <div class="select-all-row">
+                <input type="checkbox" id="selectAllCheckbox" onchange="toggleAllMeetings()">
+                <label for="selectAllCheckbox">全选</label>
+                <span style="font-size:0.8rem;color:#888;margin-left:auto;" id="selectedCount">已选 0 条</span>
+            </div>
+            <div id="meetingCheckList">
+                <!-- 动态生成 -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn-outline" onclick="closeExportModal()">取消</button>
+                <button class="btn-primary" onclick="confirmExport()">📤 导出选中</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 0. 配置
+        // ============================================================
+        const API_BASE_URL = 'http://localhost:5002';
+        let isApiHealthy = false;
+        let isMicAvailable = false;
+        let isSelectMode = false;
+        
+        // ============================================================
+        // 1. 数据存储
+        // ============================================================
+        let isRecording = false;
+        let meetings = [];
+        let currentMeetingId = null;
+        let selectedMeetingIds = [];
+        let recognition = null;
+        let isSpeechSupported = false;
+        let currentRecognitionText = '';
+        let currentMode = 'voice';
+        let currentSpeaker = null;
+        let isApiChecking = false;
+        
+        // ===== 编辑状态 =====
+        let editingItemIndex = null;
+        let editingSource = null;
+        
+        // ===== 录音相关变量 =====
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordedBlob = null;
+        let recordingStartTime = null;
+        let recordingTimer = null;
+        
+        // DOM引用
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearTextBtn = document.getElementById('clearTextBtn');
+        const recognitionText = document.getElementById('recognitionText');
+        const generateFromRecognitionBtn = document.getElementById('generateFromRecognitionBtn');
+        const addToSummaryBtn = document.getElementById('addToSummaryBtn');
+        const summaryContent = document.getElementById('summaryContent');
+        const summaryCount = document.getElementById('summaryCount');
+        const questionsListEl = document.getElementById('questionsList');
+        const questionCount = document.getElementById('questionCount');
+        const statusBar = document.getElementById('statusBar');
+        const currentTimeEl = document.getElementById('currentTime');
+        const interimHint = document.getElementById('interimHint');
+        const statusDot = document.getElementById('statusDot');
+        const statusLabel = document.getElementById('statusLabel');
+        const clearQuestionsBtn = document.getElementById('clearQuestionsBtn');
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        const actionRow = document.getElementById('actionRow');
+        const recognitionActions = document.getElementById('recognitionActions');
+        const exportAudioActions = document.getElementById('exportAudioActions');
+        const recordingDuration = document.getElementById('recordingDuration');
+        const connectionError = document.getElementById('connectionError');
+        const checkApi = document.getElementById('checkApi');
+        const checkMic = document.getElementById('checkMic');
+        const selectModeBtn = document.getElementById('selectModeBtn');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const meetingItemsContainer = document.getElementById('meetingItemsContainer');
+        const newMeetingName = document.getElementById('newMeetingName');
+        
+        const exportWavBtn = document.getElementById('exportWavBtn');
+        const exportMp3Btn = document.getElementById('exportMp3Btn');
+        
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        const manualInputArea = document.getElementById('manualInputArea');
+        const manualSummaryInput = document.getElementById('manualSummaryInput');
+        const clearManualBtn = document.getElementById('clearManualBtn');
+        const generateFromManualBtn = document.getElementById('generateFromManualBtn');
+        const addManualToSummaryBtn = document.getElementById('addManualToSummaryBtn');
+        
+        let lastProcessedText = '';
+        let isGenerating = false;
+        
+        // ============================================================
+        // 2. 时间工具
+        // ============================================================
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('zh-CN', { hour12: false });
+        }
+        
+        function getFullTimestamp() {
+            const now = new Date();
+            return now.toLocaleString('zh-CN', { hour12: false });
+        }
+        
+        function updateCurrentTime() {
+            currentTimeEl.textContent = getCurrentTime();
+        }
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        
+        // ============================================================
+        // 3. 文本后处理
+        // ============================================================
+        function postProcessText(text) {
+            if (!text || text.trim().length === 0) return text;
+            
+            let processed = text;
+            
+            const corrections = {
+                '在是': '这是',
+                '那是': '那是',
+                '它是': '它是',
+                '这个事': '这个是',
+                '那个事': '那个是',
+                '什么事': '什么是',
+                '如何事': '如何是',
+                '然后呢': '然后',
+                '那个那个': '那个',
+                '就是那个': '就是',
+                '实际上呢': '实际上',
+                '基本上呢': '基本上',
+                '咱们': '我们',
+                '咋样': '怎么样',
+                '啥': '什么',
+                '咋': '怎么',
+                '项目组': '项目组',
+                '团队': '团队',
+                '客户': '客户',
+                '需求': '需求',
+                '方案': '方案',
+                '进度': '进度',
+                '质量': '质量',
+                '成本': '成本',
+                '风险': '风险',
+                '资源': '资源',
+                '交付': '交付',
+                '上线': '上线',
+                '部署': '部署',
+                '测试': '测试',
+                '开发': '开发',
+                '设计': '设计',
+                '产品': '产品',
+                '运营': '运营',
+                '市场': '市场',
+                '销售': '销售'
+            };
+            
+            for (const [wrong, correct] of Object.entries(corrections)) {
+                processed = processed.replaceAll(wrong, correct);
+            }
+            
+            processed = processed.replace(/[。.．]/g, '。');
+            processed = processed.replace(/[?？]/g, '？');
+            processed = processed.replace(/[!！]/g, '！');
+            processed = processed.replace(/[,，、]/g, '，');
+            
+            processed = processed.replace(/\s+/g, ' ').trim();
+            if (processed.length > 5 && !processed.endsWith('。') && !processed.endsWith('？') && !processed.endsWith('！')) {
+                processed += '。';
+            }
+            
+            return processed;
+        }
+        
+        // ============================================================
+        // 4. 启动检查
+        // ============================================================
+        async function checkApiConnection() {
+            if (isApiChecking) return;
+            isApiChecking = true;
+            
+            checkApi.innerHTML = '<span style="font-size:1rem;">⏳</span> <span style="color:#555;font-size:0.8rem;">后端服务检查中...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (response.ok) {
+                    isApiHealthy = true;
+                    checkApi.innerHTML = '<span style="font-size:1rem;color:#34a853;">✅</span> <span style="color:#555;font-size:0.8rem;">后端服务已连接</span>';
+                    connectionError.style.display = 'none';
+                    statusBar.textContent = '✅ 后端服务已连接';
+                    statusBar.className = 'status-bar success';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                isApiHealthy = false;
+                checkApi.innerHTML = '<span style="font-size:1rem;color:#ea4335;">❌</span> <span style="color:#555;font-size:0.8rem;">后端服务未连接</span>';
+                connectionError.style.display = 'block';
+                statusBar.textContent = '❌ 无法连接后端服务，请检查服务是否启动';
+                statusBar.className = 'status-bar error';
+                console.error('API连接失败:', error.message);
+            }
+            
+            isApiChecking = false;
+        }
+        
+        // ============================================================
+        // 5. 启动检查 - 检查麦克风
+        // ============================================================
+        async function checkMicrophone() {
+            checkMic.innerHTML = '<span style="font-size:1rem;">⏳</span> <span style="color:#555;font-size:0.8rem;">麦克风权限检查中...</span>';
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+                
+                stream.getTracks().forEach(track => track.stop());
+                
+                isMicAvailable = true;
+                checkMic.innerHTML = '<span style="font-size:1rem;color:#34a853;">✅</span> <span style="color:#555;font-size:0.8rem;">麦克风可用</span>';
+            } catch (error) {
+                isMicAvailable = false;
+                checkMic.innerHTML = '<span style="font-size:1rem;color:#ea4335;">❌</span> <span style="color:#555;font-size:0.8rem;">麦克风被阻止，请在浏览器中允许</span>';
+                console.error('麦克风检查失败:', error.message);
+            }
+        }
+        
+        // ============================================================
+        // 6. 带错误处理的API请求
+        // ============================================================
+        async function apiRequest(url, options = {}) {
+            if (!isApiHealthy) {
+                await checkApiConnection();
+                if (!isApiHealthy) {
+                    throw new Error('后端服务未连接，请检查服务是否启动');
+                }
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}${url}`, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(options.headers || {})
+                    },
+                    signal: AbortSignal.timeout(30000)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                if (error.name === 'TypeError' || error.name === 'AbortError') {
+                    isApiHealthy = false;
+                    checkApi.innerHTML = '<span style="font-size:1rem;color:#ea4335;">❌</span> <span style="color:#555;font-size:0.8rem;">后端服务断开</span>';
+                    connectionError.style.display = 'block';
+                    statusBar.textContent = '❌ 连接断开，请检查后端服务';
+                    statusBar.className = 'status-bar error';
+                }
+                throw error;
+            }
+        }
+        
+        // ============================================================
+        // 7. 初始化语音识别
+        // ============================================================
+        try {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'zh-CN';
+                recognition.maxAlternatives = 5;
+                
+                recognition.onresult = function(event) {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript + ' ';
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    if (interimTranscript) {
+                        interimHint.innerHTML = `<span class="spinner"></span> 识别中: ${interimTranscript}`;
+                    }
+                    
+                    if (finalTranscript) {
+                        const rawText = finalTranscript.trim();
+                        const processedText = postProcessText(rawText);
+                        
+                        if (processedText && processedText !== lastProcessedText) {
+                            lastProcessedText = processedText;
+                            currentRecognitionText += (currentRecognitionText ? '\n' : '') + processedText;
+                            recognitionText.value = currentRecognitionText;
+                            recognitionText.scrollTop = recognitionText.scrollHeight;
+                        }
+                        
+                        interimHint.innerHTML = `✅ 已识别: ${processedText.substring(0, 50)}${processedText.length > 50 ? '...' : ''}`;
+                    }
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('语音识别错误:', event.error);
+                    interimHint.innerHTML = `❌ 错误: ${event.error}`;
+                    if (event.error === 'not-allowed') {
+                        statusBar.textContent = '❌ 请允许麦克风权限后重试';
+                        statusBar.className = 'status-bar error';
+                    }
+                };
+                
+                recognition.onend = function() {
+                    if (isRecording) {
+                        try {
+                            recognition.start();
+                        } catch (e) {}
+                    } else {
+                        setStatus('idle', '已停止');
+                        if (currentMode === 'voice') {
+                            interimHint.innerHTML = '💡 点击"开始录音"开始会议记录';
+                        }
+                    }
+                };
+                
+                isSpeechSupported = true;
+            }
+        } catch (e) {
+            console.log('浏览器不支持语音识别');
+            isSpeechSupported = false;
+        }
+        
+        // ============================================================
+        // 8. 状态管理
+        // ============================================================
+        function setStatus(state, label) {
+            const states = {
+                idle: { dot: 'idle', label: '等待开始' },
+                recording: { dot: 'recording', label: '🔴 录音中...' },
+                done: { dot: 'done', label: '✅ 已停止' },
+                error: { dot: 'error', label: '❌ 错误' }
+            };
+            const s = states[state] || states.idle;
+            statusDot.className = `status-dot ${s.dot}`;
+            statusLabel.textContent = s.label || label;
+        }
+        
+        // ============================================================
+        // 9. AI语音播报功能
+        // ============================================================
+        function speakText(text, buttonElement) {
+            if (currentSpeaker) {
+                window.speechSynthesis.cancel();
+                currentSpeaker = null;
+                document.querySelectorAll('.btn-speaking').forEach(btn => {
+                    btn.classList.remove('btn-speaking');
+                    btn.textContent = '🔊 播报';
+                });
+                if (buttonElement) {
+                    buttonElement.textContent = '🔊 播报';
+                    buttonElement.classList.remove('btn-speaking');
+                }
+                return;
+            }
+            
+            if (!window.speechSynthesis) {
+                alert('您的浏览器不支持语音播报功能，请使用Chrome浏览器');
+                return;
+            }
+            
+            const cleanText = text.replace(/<br>/g, '。').replace(/<[^>]*>/g, '');
+            
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const zhVoice = voices.find(v => v.lang.startsWith('zh'));
+            if (zhVoice) {
+                utterance.voice = zhVoice;
+            }
+            
+            if (buttonElement) {
+                buttonElement.textContent = '⏹️ 停止播报';
+                buttonElement.classList.add('btn-speaking');
+            }
+            currentSpeaker = utterance;
+            statusBar.textContent = '🔊 正在播报会议摘要...';
+            
+            utterance.onend = function() {
+                currentSpeaker = null;
+                if (buttonElement) {
+                    buttonElement.textContent = '🔊 播报';
+                    buttonElement.classList.remove('btn-speaking');
+                }
+                statusBar.textContent = '✅ 播报完成';
+            };
+            
+            utterance.onerror = function(event) {
+                console.error('播报错误:', event);
+                currentSpeaker = null;
+                if (buttonElement) {
+                    buttonElement.textContent = '🔊 播报';
+                    buttonElement.classList.remove('btn-speaking');
+                }
+                statusBar.textContent = '❌ 播报出错';
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        if (window.speechSynthesis) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = function() {
+                window.speechSynthesis.getVoices();
+            };
+        }
+        
+        // ============================================================
+        // 10. 会议管理函数
+        // ============================================================
+        function createNewMeeting(title) {
+            if (meetings.some(m => m.title === title)) {
+                alert(`会议"${title}"已存在，请使用其他名称`);
+                return null;
+            }
+            
+            const newMeeting = {
+                id: Date.now(),
+                title: title || `会议 ${meetings.length + 1}`,
+                time: getCurrentTime(),
+                summaries: [],  // 摘要列表：每个摘要对应一条纪要
+                items: []
+            };
+            meetings.push(newMeeting);
+            saveToLocalStorage();
+            renderMeetingList();
+            selectMeeting(newMeeting.id);
+            return newMeeting;
+        }
+        
+        function selectMeeting(id) {
+            currentMeetingId = id;
+            const meeting = meetings.find(m => m.id === id);
+            if (!meeting) return;
+            
+            if (isSelectMode) {
+                toggleSelectMode();
+            }
+            
+            clearEditingState();
+            
+            renderMeetingList();
+            updateQuestionsDisplay();
+            updateSummaryDisplay();
+            statusBar.textContent = `📂 当前会议：${meeting.title}`;
+        }
+        
+        // ============================================================
+        // 11. 添加新会议
+        // ============================================================
+        function addNewMeeting() {
+            const name = newMeetingName.value.trim();
+            if (!name) {
+                alert('请输入会议名称');
+                return;
+            }
+            
+            const meeting = createNewMeeting(name);
+            if (meeting) {
+                newMeetingName.value = '';
+                statusBar.textContent = `✅ 已创建会议"${name}"`;
+            }
+        }
+        
+        // ============================================================
+        // 12. 删除整个会议
+        // ============================================================
+        function deleteMeeting(meetingId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            const meeting = meetings.find(m => m.id === meetingId);
+            if (!meeting) return;
+            
+            if (!confirm(`确定要删除会议"${meeting.title}"及其所有内容吗？\n（包括 ${meeting.items.length} 条会议纪要和 ${meeting.summaries.length} 条摘要）`)) {
+                return;
+            }
+            
+            meetings = meetings.filter(m => m.id !== meetingId);
+            
+            if (currentMeetingId === meetingId) {
+                currentMeetingId = meetings.length > 0 ? meetings[0].id : null;
+            }
+            
+            saveToLocalStorage();
+            renderMeetingList();
+            if (currentMeetingId) {
+                selectMeeting(currentMeetingId);
+            } else {
+                updateQuestionsDisplay();
+                updateSummaryDisplay();
+                statusBar.textContent = '📂 请选择或添加会议';
+            }
+            statusBar.textContent = `✅ 已删除会议"${meeting.title}"`;
+        }
+        
+        // ============================================================
+        // 13. 渲染会议列表
+        // ============================================================
+        function renderMeetingList() {
+            if (meetings.length === 0) {
+                meetingItemsContainer.innerHTML = '<div class="empty-state-small">暂无会议，请添加</div>';
+                return;
+            }
+            
+            let html = '';
+            meetings.forEach(meeting => {
+                const isActive = meeting.id === currentMeetingId;
+                const itemCount = meeting.items ? meeting.items.length : 0;
+                const summaryCount = meeting.summaries ? meeting.summaries.length : 0;
+                const badgeClass = itemCount === 0 && summaryCount === 0 ? 'empty' : '';
+                html += `
+                    <div class="meeting-item ${isActive ? 'active' : ''}">
+                        <div class="meeting-info" onclick="selectMeeting(${meeting.id})">
+                            <span class="meeting-title">${meeting.title || '未命名会议'}</span>
+                            <span class="meeting-badge ${badgeClass}">${itemCount}条</span>
+                            <span class="meeting-time">${meeting.time}</span>
+                        </div>
+                        <button class="meeting-delete-btn" onclick="deleteMeeting(${meeting.id}, event)" title="删除整个会议">✕</button>
+                    </div>
+                `;
+            });
+            meetingItemsContainer.innerHTML = html;
+        }
+        
+        // ============================================================
+        // 14. 选择模式切换
+        // ============================================================
+        function toggleSelectMode() {
+            isSelectMode = !isSelectMode;
+            
+            if (isSelectMode) {
+                selectModeBtn.textContent = '☑️ 取消选择';
+                selectModeBtn.classList.add('btn-primary');
+                selectModeBtn.classList.remove('btn-outline');
+                deleteSelectedBtn.style.display = 'inline-flex';
+                document.querySelectorAll('.summary-item .item-checkbox').forEach(el => {
+                    el.classList.add('show');
+                });
+                statusBar.textContent = '📌 选择模式：勾选要删除的会议纪要';
+            } else {
+                selectModeBtn.textContent = '☑️ 选择';
+                selectModeBtn.classList.remove('btn-primary');
+                selectModeBtn.classList.add('btn-outline');
+                deleteSelectedBtn.style.display = 'none';
+                document.querySelectorAll('.summary-item .item-checkbox').forEach(el => {
+                    el.classList.remove('show');
+                    const checkbox = el.querySelector('input[type="checkbox"]');
+                    if (checkbox) checkbox.checked = false;
+                });
+                statusBar.textContent = '✅ 已退出选择模式';
+            }
+        }
+        
+        // ============================================================
+        // 15. 删除选中的纪要（同时删除对应的摘要）
+        // ============================================================
+        function deleteSelectedItems() {
+            const checkedBoxes = document.querySelectorAll('.summary-item .item-checkbox input[type="checkbox"]:checked');
+            if (checkedBoxes.length === 0) {
+                alert('请至少选择一条纪要');
+                return;
+            }
+            
+            if (!confirm(`确定要删除选中的 ${checkedBoxes.length} 条会议纪要及其对应的摘要吗？`)) {
+                return;
+            }
+            
+            const indices = [];
+            checkedBoxes.forEach(cb => {
+                const index = parseInt(cb.dataset.index);
+                if (!isNaN(index)) {
+                    indices.push(index);
+                }
+            });
+            indices.sort((a, b) => b - a);
+            
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting) return;
+            
+            indices.forEach(idx => {
+                meeting.items.splice(idx, 1);
+                // 同时删除对应的摘要（如果存在）
+                if (meeting.summaries && meeting.summaries.length > idx) {
+                    meeting.summaries.splice(idx, 1);
+                }
+            });
+            
+            saveToLocalStorage();
+            updateSummaryDisplay();
+            renderMeetingList();
+            updateQuestionsDisplay();
+            
+            if (isSelectMode) {
+                toggleSelectMode();
+            }
+            
+            clearEditingState();
+            
+            statusBar.textContent = `✅ 已删除 ${indices.length} 条会议纪要及对应摘要`;
+        }
+        
+        // ============================================================
+        // 16. 编辑状态管理
+        // ============================================================
+        function clearEditingState() {
+            editingItemIndex = null;
+            editingSource = null;
+            document.querySelectorAll('.summary-item.editing').forEach(el => {
+                el.classList.remove('editing');
+            });
+            document.querySelectorAll('.editing-indicator').forEach(el => el.remove());
+        }
+        
+        function setEditingState(index, source) {
+            clearEditingState();
+            editingItemIndex = index;
+            editingSource = source;
+            
+            const items = document.querySelectorAll('.summary-item');
+            if (items[index]) {
+                items[index].classList.add('editing');
+                const timeEl = items[index].querySelector('.time');
+                if (timeEl && !timeEl.querySelector('.editing-indicator')) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'editing-indicator';
+                    indicator.textContent = '✏️ 编辑中';
+                    timeEl.appendChild(indicator);
+                }
+            }
+        }
+        
+        // ============================================================
+        // 17. 点击纪要加载到输入框
+        // ============================================================
+        function loadSummaryItemToInput(index) {
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting || !meeting.items[index]) return;
+            
+            const item = meeting.items[index];
+            const text = item.text;
+            
+            if (currentMode === 'voice') {
+                recognitionText.value = text;
+                currentRecognitionText = text;
+                setEditingState(index, 'recognition');
+                statusBar.textContent = `✏️ 正在编辑第 ${index + 1} 条纪要（语音模式）`;
+            } else {
+                manualSummaryInput.value = text;
+                setEditingState(index, 'manual');
+                statusBar.textContent = `✏️ 正在编辑第 ${index + 1} 条纪要（手动模式）`;
+            }
+        }
+        
+        // ============================================================
+        // 18. 更新会议纪要显示
+        // ============================================================
+        function updateSummaryDisplay() {
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting || !meeting.items || meeting.items.length === 0) {
+                summaryContent.innerHTML = '<div class="empty-state">还没有会议纪要内容，点击"添加到会议纪要"添加</div>';
+                summaryCount.textContent = '共 0 条';
+                return;
+            }
+            
+            let html = '';
+            meeting.items.forEach((item, index) => {
+                const formattedText = item.text.replace(/\n/g, '<br>');
+                const isEditing = (editingItemIndex === index);
+                const hasSummary = meeting.summaries && meeting.summaries[index] ? '📄' : '';
+                html += `
+                    <div class="summary-item ${isEditing ? 'editing' : ''}" onclick="loadSummaryItemToInput(${index})" title="点击编辑此条纪要">
+                        <div class="item-checkbox ${isSelectMode ? 'show' : ''}">
+                            <input type="checkbox" data-index="${index}" onclick="event.stopPropagation()">
+                        </div>
+                        <div class="item-content">
+                            <div class="time">
+                                🕐 ${item.time}
+                                ${hasSummary ? ' 📄' : ''}
+                                ${isEditing ? '<span class="editing-indicator">✏️ 编辑中</span>' : ''}
+                            </div>
+                            <div class="text">${formattedText}</div>
+                        </div>
+                        <div class="item-actions" onclick="event.stopPropagation()">
+                            <button class="btn-danger btn-sm" onclick="removeSingleSummaryItem(${index})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            summaryContent.innerHTML = html;
+            summaryCount.textContent = `共 ${meeting.items.length} 条`;
+        }
+        
+        // ============================================================
+        // 19. 删除单条纪要（同时删除对应的摘要）
+        // ============================================================
+        function removeSingleSummaryItem(index) {
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting) return;
+            
+            if (!confirm('确定要删除这条会议纪要及其对应的摘要吗？')) return;
+            
+            meeting.items.splice(index, 1);
+            if (meeting.summaries && meeting.summaries.length > index) {
+                meeting.summaries.splice(index, 1);
+            }
+            
+            if (editingItemIndex === index) {
+                clearEditingState();
+            } else if (editingItemIndex !== null && editingItemIndex > index) {
+                editingItemIndex = editingItemIndex - 1;
+            }
+            
+            saveToLocalStorage();
+            updateSummaryDisplay();
+            renderMeetingList();
+            updateQuestionsDisplay();
+            statusBar.textContent = '✅ 会议纪要及对应摘要已删除';
+        }
+        
+        // ============================================================
+        // 20. 更新会议摘要显示（显示所有摘要）
+        // ============================================================
+        function updateQuestionsDisplay() {
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting || !meeting.summaries || meeting.summaries.length === 0) {
+                questionsListEl.innerHTML = '<div class="question-item empty-state" style="border-left-color:#ccc;color:#aaa;text-align:center;padding:30px 0;">暂无会议摘要，点击"生成会议摘要"为每条纪要生成摘要</div>';
+                questionCount.textContent = '0';
+                return;
+            }
+            
+            let html = '';
+            meeting.summaries.forEach((summary, index) => {
+                // 如果有对应的纪要，显示关联信息
+                const relatedText = meeting.items[index] ? meeting.items[index].text.substring(0, 30) + '...' : '（已删除）';
+                const formattedText = summary.replace(/\n/g, '<br>');
+                const plainText = summary.replace(/\n/g, '。');
+                
+                html += `
+                    <div class="question-item">
+                        <div class="q-time">📄 摘要 ${index + 1} 🕐 ${meeting.time}</div>
+                        <div class="question-text">${formattedText}</div>
+                        <div style="font-size:0.75rem;color:#888;margin-bottom:8px;">📎 对应纪要：${relatedText}</div>
+                        <div class="question-actions">
+                            <button class="btn-teal btn-sm" onclick="speakText('${plainText.replace(/'/g, "\\'")}', this)">🔊 播报</button>
+                            <button class="btn-primary btn-sm" onclick="getSuggestionForSummary('${plainText.replace(/'/g, "\\'")}', this)">💡 获取建议</button>
+                            <button class="btn-danger btn-sm" onclick="deleteSingleSummary(${index})">🗑️</button>
+                        </div>
+                        <div class="answer-container"></div>
+                    </div>
+                `;
+            });
+            questionsListEl.innerHTML = html;
+            questionCount.textContent = meeting.summaries.length;
+        }
+        
+        // ============================================================
+        // 21. 删除单条摘要
+        // ============================================================
+        function deleteSingleSummary(index) {
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting || !meeting.summaries || !meeting.summaries[index]) return;
+            
+            if (!confirm('确定要删除这条摘要吗？（对应的会议纪要不会被删除）')) return;
+            
+            meeting.summaries.splice(index, 1);
+            saveToLocalStorage();
+            updateQuestionsDisplay();
+            statusBar.textContent = '✅ 摘要已删除';
+        }
+        
+        // ============================================================
+        // 22. 会议摘要获取建议功能
+        // ============================================================
+        window.getSuggestionForSummary = async function(text, btnElement) {
+            if (!isApiHealthy) {
+                await checkApiConnection();
+                if (!isApiHealthy) {
+                    alert('❌ 无法连接到后端服务，请检查服务是否启动');
+                    return;
+                }
+            }
+            
+            const item = btnElement.closest('.question-item');
+            const container = item.querySelector('.answer-container');
+            
+            if (container.classList.contains('show')) {
+                container.classList.remove('show');
+                btnElement.textContent = '💡 获取建议';
+                return;
+            }
+            
+            container.className = 'answer-container loading';
+            container.innerHTML = `
+                <div class="answer-header">
+                    <span>💡 建议生成中...</span>
+                    <button class="answer-close" onclick="this.closest('.answer-container').classList.remove('show'); this.closest('.question-item').querySelector('.btn-primary').textContent='💡 获取建议'">✕</button>
+                </div>
+                <div class="answer-content">🤔 正在分析...</div>
+            `;
+            container.classList.add('show');
+            btnElement.textContent = '⏳ 生成中...';
+            
+            try {
+                const data = await apiRequest('/api/answer_question', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        question: text,
+                        meeting_mode: true
+                    })
+                });
+                
+                if (data.answer) {
+                    container.className = 'answer-container show';
+                    container.innerHTML = `
+                        <div class="answer-header">
+                            <span>💡 建议</span>
+                            <button class="answer-close" onclick="this.closest('.answer-container').classList.remove('show'); this.closest('.question-item').querySelector('.btn-primary').textContent='💡 获取建议'">✕</button>
+                        </div>
+                        <div class="answer-content">${data.answer}</div>
+                    `;
+                    btnElement.textContent = '💡 收起建议';
+                } else {
+                    throw new Error(data.error || '未知错误');
+                }
+            } catch (error) {
+                container.className = 'answer-container show error';
+                container.innerHTML = `
+                    <div class="answer-header">
+                        <span>❌ 生成失败</span>
+                        <button class="answer-close" onclick="this.closest('.answer-container').classList.remove('show'); this.closest('.question-item').querySelector('.btn-primary').textContent='💡 获取建议'">✕</button>
+                    </div>
+                    <div class="answer-content">${error.message}</div>
+                `;
+                btnElement.textContent = '💡 获取建议';
+            }
+        };
+        
+        // ============================================================
+        // 23. 确保当前会议存在
+        // ============================================================
+        function ensureCurrentMeeting() {
+            if (!currentMeetingId) {
+                alert('请先选择一个会议或创建新会议');
+                return false;
+            }
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting) {
+                alert('当前会议不存在，请重新选择');
+                return false;
+            }
+            return true;
+        }
+        
+        // ============================================================
+        // 24. 获取当前输入文本
+        // ============================================================
+        function getCurrentInputText() {
+            if (currentMode === 'voice') {
+                return recognitionText.value.trim();
+            } else {
+                return manualSummaryInput.value.trim();
+            }
+        }
+        
+        // ============================================================
+        // 25. 清空输入框
+        // ============================================================
+        function clearInputText() {
+            if (currentMode === 'voice') {
+                recognitionText.value = '';
+                currentRecognitionText = '';
+                lastProcessedText = '';
+            } else {
+                manualSummaryInput.value = '';
+            }
+            clearEditingState();
+        }
+        
+        // ============================================================
+        // 26. 本地存储
+        // ============================================================
+        function saveToLocalStorage() {
+            try {
+                const data = { meetings: meetings };
+                localStorage.setItem('meetingAssistantData', JSON.stringify(data));
+            } catch (e) {}
+        }
+        
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('meetingAssistantData');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.meetings) {
+                        meetings = data.meetings;
+                    }
+                }
+            } catch (e) {}
+            
+            renderMeetingList();
+            if (meetings.length > 0) {
+                selectMeeting(meetings[0].id);
+            } else {
+                updateQuestionsDisplay();
+                updateSummaryDisplay();
+                statusBar.textContent = '📂 请添加会议';
+            }
+        }
+        
+        // ============================================================
+        // 27. 添加或更新会议纪要
+        // ============================================================
+        function addOrUpdateSummaryItem(text, source) {
+            if (!ensureCurrentMeeting()) return false;
+            
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting) return false;
+            
+            // 确保 summaries 数组存在
+            if (!meeting.summaries) {
+                meeting.summaries = [];
+            }
+            
+            // 如果正在编辑模式，覆盖原来的条目
+            if (editingItemIndex !== null && editingItemIndex < meeting.items.length) {
+                meeting.items[editingItemIndex] = {
+                    time: getCurrentTime(),
+                    text: text
+                };
+                // 注意：编辑纪要时，对应的摘要不会被自动删除，但用户需要重新生成
+                statusBar.textContent = `✅ 已更新会议纪要（第 ${editingItemIndex + 1} 条）`;
+            } else {
+                meeting.items.push({
+                    time: getCurrentTime(),
+                    text: text
+                });
+                statusBar.textContent = '✅ 已添加到会议纪要';
+            }
+            
+            saveToLocalStorage();
+            updateSummaryDisplay();
+            renderMeetingList();
+            clearEditingState();
+            return true;
+        }
+        
+        // ============================================================
+        // 28. 生成会议摘要（为当前编辑或新添加的纪要生成摘要）
+        // ============================================================
+        async function generateOrUpdateSummary(text, source) {
+            if (!ensureCurrentMeeting()) return false;
+            if (!isApiHealthy) {
+                await checkApiConnection();
+                if (!isApiHealthy) {
+                    alert('❌ 无法连接到后端服务，请检查服务是否启动');
+                    return false;
+                }
+            }
+            
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting) return false;
+            
+            // 确保 summaries 数组存在
+            if (!meeting.summaries) {
+                meeting.summaries = [];
+            }
+            
+            // 确定要操作的索引：如果是编辑模式，使用编辑的索引；否则使用新增的索引
+            let targetIndex = editingItemIndex;
+            
+            // 如果不是编辑模式，先添加纪要
+            if (editingItemIndex === null || editingItemIndex >= meeting.items.length) {
+                // 添加新纪要
+                meeting.items.push({
+                    time: getCurrentTime(),
+                    text: text
+                });
+                targetIndex = meeting.items.length - 1;
+            } else {
+                // 编辑模式：更新纪要内容
+                meeting.items[editingItemIndex] = {
+                    time: getCurrentTime(),
+                    text: text
+                };
+                targetIndex = editingItemIndex;
+            }
+            
+            try {
+                const data = await apiRequest('/api/generate_questions', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        text: text,
+                        meeting_mode: true
+                    })
+                });
+                
+                if (data.questions && data.questions.length > 0) {
+                    const fullSummary = data.questions.join('\n\n---\n\n');
+                    
+                    // 在对应位置添加或更新摘要
+                    if (targetIndex < meeting.summaries.length) {
+                        // 更新已有的摘要
+                        meeting.summaries[targetIndex] = fullSummary;
+                        statusBar.textContent = `✅ 已更新第 ${targetIndex + 1} 条纪要的摘要`;
+                    } else {
+                        // 新增摘要
+                        // 确保数组长度足够
+                        while (meeting.summaries.length < targetIndex) {
+                            meeting.summaries.push('');
+                        }
+                        meeting.summaries.push(fullSummary);
+                        statusBar.textContent = `✅ 已生成第 ${targetIndex + 1} 条纪要的摘要`;
+                    }
+                    
+                    meeting.time = getCurrentTime();
+                    
+                    saveToLocalStorage();
+                    renderMeetingList();
+                    updateQuestionsDisplay();
+                    updateSummaryDisplay();
+                    clearEditingState();
+                    return true;
+                } else {
+                    statusBar.textContent = '⚠️ 未能生成会议摘要';
+                    return false;
+                }
+            } catch (error) {
+                statusBar.textContent = '❌ 生成失败: ' + error.message;
+                statusBar.className = 'status-bar error';
+                alert('生成失败: ' + error.message);
+                return false;
+            }
+        }
+        
+        // ============================================================
+        // 29. 录音控制
+        // ============================================================
+        startBtn.addEventListener('click', async function() {
+            if (!ensureCurrentMeeting()) return;
+            
+            if (!isMicAvailable) {
+                await checkMicrophone();
+                if (!isMicAvailable) {
+                    alert('❌ 无法访问麦克风，请在浏览器中允许麦克风权限后重试');
+                    return;
+                }
+            }
+            
+            if (!isApiHealthy) {
+                await checkApiConnection();
+                if (!isApiHealthy) {
+                    alert('❌ 无法连接到后端服务，请检查服务是否启动');
+                    return;
+                }
+            }
+            
+            if (currentMode !== 'voice') {
+                alert('请先切换到"语音模式"');
+                return;
+            }
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 16000
+                    }
+                });
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                recordedBlob = null;
+                
+                mediaRecorder.ondataavailable = function(event) {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = function() {
+                    recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    exportAudioActions.classList.add('show');
+                    statusBar.textContent = '✅ 会议录音已停止，可导出音频文件';
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start(100);
+                
+                if (isSpeechSupported && recognition) {
+                    try {
+                        recognition.start();
+                    } catch (e) {}
+                }
+                
+                isRecording = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                startBtn.textContent = '🔴 录音中...';
+                startBtn.classList.add('btn-recording');
+                setStatus('recording', '🔴 录音中...');
+                interimHint.innerHTML = '<span class="spinner"></span> 正在记录会议...';
+                statusBar.textContent = '🔴 会议录音中，请发言...';
+                exportAudioActions.classList.remove('show');
+                
+                recordingStartTime = Date.now();
+                clearInterval(recordingTimer);
+                recordingTimer = setInterval(updateRecordingDuration, 1000);
+                recordingDuration.classList.add('show');
+                
+            } catch (error) {
+                console.error('启动录音失败:', error);
+                statusBar.textContent = '❌ 无法访问麦克风: ' + error.message;
+                statusBar.className = 'status-bar error';
+                alert('无法访问麦克风，请检查权限设置');
+            }
+        });
+        
+        stopBtn.addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            
+            if (isSpeechSupported && recognition) {
+                try {
+                    recognition.stop();
+                } catch (e) {}
+            }
+            
+            isRecording = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            startBtn.textContent = '🎙️ 开始录音';
+            startBtn.classList.remove('btn-recording');
+            setStatus('done', '✅ 已停止');
+            statusBar.textContent = '✅ 会议录音已停止，可以编辑文本或导出音频';
+            interimHint.innerHTML = '✅ 录音已停止，你可以编辑上面的文本';
+            
+            clearInterval(recordingTimer);
+            recordingDuration.classList.remove('show');
+            recordingDuration.textContent = '00:00';
+        });
+        
+        function updateRecordingDuration() {
+            if (!recordingStartTime) return;
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const secs = String(elapsed % 60).padStart(2, '0');
+            recordingDuration.textContent = `${mins}:${secs}`;
+        }
+        
+        clearTextBtn.addEventListener('click', function() {
+            if (currentRecognitionText && !confirm('确定要清空识别内容吗？')) return;
+            clearInputText();
+            interimHint.innerHTML = '💡 内容已清空';
+        });
+        
+        // ============================================================
+        // 30. 音频导出
+        // ============================================================
+        exportWavBtn.addEventListener('click', function() {
+            if (!recordedBlob) {
+                alert('没有可导出的录音，请先录音');
+                return;
+            }
+            downloadAudio(recordedBlob, 'wav');
+        });
+        
+        exportMp3Btn.addEventListener('click', async function() {
+            if (!recordedBlob) {
+                alert('没有可导出的录音，请先录音');
+                return;
+            }
+            
+            try {
+                this.disabled = true;
+                this.textContent = '⏳ 转换中...';
+                statusBar.textContent = '🔄 正在转换为 MP3...';
+                
+                const mp3Blob = await convertWavToMp3(recordedBlob);
+                downloadAudio(mp3Blob, 'mp3');
+                
+                statusBar.textContent = '✅ MP3 导出成功';
+            } catch (error) {
+                console.error('MP3转换失败:', error);
+                alert('MP3转换失败: ' + error.message);
+                statusBar.textContent = '❌ MP3转换失败';
+            } finally {
+                this.disabled = false;
+                this.textContent = '🎵 导出 MP3';
+            }
+        });
+        
+        function downloadAudio(blob, format) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            a.download = `会议录音_${timestamp}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // ============================================================
+        // 31. WAV 转 MP3
+        // ============================================================
+        async function convertWavToMp3(wavBlob) {
+            if (typeof lamejs === 'undefined') {
+                await loadLameJs();
+            }
+            
+            const arrayBuffer = await wavBlob.arrayBuffer();
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            const samples = audioBuffer.getChannelData(0);
+            const sampleRate = audioBuffer.sampleRate;
+            
+            const pcmData = floatTo16BitPCM(samples);
+            
+            const mp3Encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+            const mp3Data = [];
+            
+            const sampleBlockSize = 1152;
+            for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
+                const chunk = pcmData.subarray(i, i + sampleBlockSize);
+                const mp3buf = mp3Encoder.encodeBuffer(chunk);
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+            }
+            
+            const mp3buf = mp3Encoder.flush();
+            if (mp3buf.length > 0) {
+                mp3Data.push(mp3buf);
+            }
+            
+            return new Blob(mp3Data, { type: 'audio/mp3' });
+        }
+        
+        function floatTo16BitPCM(samples) {
+            const pcmData = new Int16Array(samples.length);
+            for (let i = 0; i < samples.length; i++) {
+                const s = Math.max(-1, Math.min(1, samples[i]));
+                pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            return pcmData;
+        }
+        
+        function loadLameJs() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        // ============================================================
+        // 32. 生成会议摘要（统一处理）
+        // ============================================================
+        generateFromRecognitionBtn.addEventListener('click', async function() {
+            const text = getCurrentInputText();
+            if (!text) {
+                alert('请先输入或录制会议内容');
+                return;
+            }
+            
+            if (isGenerating) return;
+            isGenerating = true;
+            this.disabled = true;
+            this.textContent = '⏳ 生成中...';
+            
+            await generateOrUpdateSummary(text, 'recognition');
+            
+            isGenerating = false;
+            this.disabled = false;
+            this.textContent = '📋 生成会议摘要';
+        });
+        
+        // ============================================================
+        // 33. 添加到会议纪要
+        // ============================================================
+        addToSummaryBtn.addEventListener('click', function() {
+            const text = getCurrentInputText();
+            if (!text) {
+                alert('请先输入或录制会议内容');
+                return;
+            }
+            
+            addOrUpdateSummaryItem(text, 'recognition');
+            clearInputText();
+        });
+        
+        // ============================================================
+        // 34. 模式切换
+        // ============================================================
+        function switchMode(mode) {
+            clearEditingState();
+            currentMode = mode;
+            
+            modeBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            
+            if (mode === 'voice') {
+                document.getElementById('recognitionArea').style.display = 'block';
+                manualInputArea.style.display = 'none';
+                actionRow.style.display = 'flex';
+                recognitionActions.style.display = 'flex';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                interimHint.innerHTML = '💡 点击"开始录音"开始会议记录';
+                if (isRecording) stopBtn.click();
+            } else if (mode === 'manual') {
+                document.getElementById('recognitionArea').style.display = 'none';
+                manualInputArea.style.display = 'block';
+                actionRow.style.display = 'none';
+                if (isRecording) stopBtn.click();
+            }
+            
+            statusBar.textContent = `✅ 已切换到${mode === 'voice' ? '语音' : '手动输入'}模式`;
+        }
+        
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchMode(this.dataset.mode);
+            });
+        });
+        
+        // ============================================================
+        // 35. 手动输入功能
+        // ============================================================
+        clearManualBtn.addEventListener('click', function() {
+            if (manualSummaryInput.value && !confirm('确定清空吗？')) return;
+            manualSummaryInput.value = '';
+            clearEditingState();
+        });
+        
+        generateFromManualBtn.addEventListener('click', async function() {
+            const text = getCurrentInputText();
+            if (!text) {
+                alert('请先输入会议内容');
+                return;
+            }
+            
+            if (isGenerating) return;
+            isGenerating = true;
+            this.disabled = true;
+            this.textContent = '⏳ 生成中...';
+            
+            await generateOrUpdateSummary(text, 'manual');
+            
+            isGenerating = false;
+            this.disabled = false;
+            this.textContent = '📋 生成会议摘要';
+        });
+        
+        addManualToSummaryBtn.addEventListener('click', function() {
+            const text = getCurrentInputText();
+            if (!text) {
+                alert('请先输入会议内容');
+                return;
+            }
+            
+            addOrUpdateSummaryItem(text, 'manual');
+            clearInputText();
+        });
+        
+        // ============================================================
+        // 36. 手动添加摘要（为当前会议添加独立摘要，不关联纪要）
+        // ============================================================
+        addQuestionBtn.addEventListener('click', function() {
+            if (!ensureCurrentMeeting()) return;
+            
+            const q = prompt('请输入会议摘要内容:');
+            if (q && q.trim()) {
+                const meeting = meetings.find(m => m.id === currentMeetingId);
+                if (!meeting.summaries) {
+                    meeting.summaries = [];
+                }
+                meeting.summaries.push(q.trim());
+                meeting.time = getCurrentTime();
+                saveToLocalStorage();
+                renderMeetingList();
+                updateQuestionsDisplay();
+                statusBar.textContent = '✅ 已添加独立摘要';
+            }
+        });
+        
+        // ============================================================
+        // 37. 清空所有摘要
+        // ============================================================
+        clearQuestionsBtn.addEventListener('click', function() {
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            if (!meeting) {
+                statusBar.textContent = '⚠️ 没有会议可清空';
+                return;
+            }
+            
+            if (!meeting.summaries || meeting.summaries.length === 0) {
+                statusBar.textContent = '⚠️ 当前会议没有摘要内容';
+                return;
+            }
+            
+            if (confirm('确定要清空当前会议的所有摘要吗？（会议纪不会被删除）')) {
+                meeting.summaries = [];
+                saveToLocalStorage();
+                updateQuestionsDisplay();
+                statusBar.textContent = '✅ 所有摘要已清空';
+            }
+        });
+        
+        // ============================================================
+        // 38. 导出功能
+        // ============================================================
+        function openExportModal() {
+            if (meetings.length === 0) {
+                alert('没有可导出的会议内容');
+                return;
+            }
+            
+            selectedMeetingIds = [];
+            const modal = document.getElementById('exportModal');
+            modal.classList.add('show');
+            renderExportChecklist();
+        }
+        
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('show');
+        }
+        
+        function renderExportChecklist() {
+            const container = document.getElementById('meetingCheckList');
+            let html = '';
+            meetings.forEach(meeting => {
+                const checked = selectedMeetingIds.includes(meeting.id) ? 'checked' : '';
+                const itemCount = meeting.items ? meeting.items.length : 0;
+                const summaryCount = meeting.summaries ? meeting.summaries.length : 0;
+                html += `
+                    <div class="meeting-check-item">
+                        <input type="checkbox" ${checked} onchange="toggleMeeting(${meeting.id})">
+                        <span class="check-title">${meeting.title || '未命名会议'}</span>
+                        <span class="check-time">${meeting.time} (${itemCount}条纪要 ${summaryCount}条摘要)</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            
+            document.getElementById('selectAllCheckbox').checked = false;
+            updateSelectedCount();
+        }
+        
+        function toggleMeeting(id) {
+            const index = selectedMeetingIds.indexOf(id);
+            if (index > -1) {
+                selectedMeetingIds.splice(index, 1);
+            } else {
+                selectedMeetingIds.push(id);
+            }
+            renderExportChecklist();
+        }
+        
+        function toggleAllMeetings() {
+            const checked = document.getElementById('selectAllCheckbox').checked;
+            if (checked) {
+                selectedMeetingIds = meetings.map(m => m.id);
+            } else {
+                selectedMeetingIds = [];
+            }
+            renderExportChecklist();
+        }
+        
+        function updateSelectedCount() {
+            document.getElementById('selectedCount').textContent = `已选 ${selectedMeetingIds.length} 条`;
+        }
+        
+        function confirmExport() {
+            if (selectedMeetingIds.length === 0) {
+                alert('请至少选择一条会议记录');
+                return;
+            }
+            
+            const selectedMeetings = meetings.filter(m => selectedMeetingIds.includes(m.id));
+            closeExportModal();
+            exportSelectedMeetings(selectedMeetings);
+        }
+        
+        function exportSelectedMeetings(selectedMeetings) {
+            let content = '════════════════════════════════════════════\n';
+            content += '  📋 会议纪要导出\n';
+            content += `  导出时间: ${getFullTimestamp()}\n`;
+            content += `  导出数量: ${selectedMeetings.length} 个会议\n`;
+            content += '════════════════════════════════════════════\n\n';
+            
+            selectedMeetings.forEach((meeting, idx) => {
+                content += `【会议 ${idx + 1}】📌 ${meeting.title || '未命名会议'}\n`;
+                content += `🕐 会议时间: ${meeting.time}\n`;
+                content += '─' + '─'.repeat(50) + '\n';
+                
+                if (meeting.summaries && meeting.summaries.length > 0) {
+                    content += '\n📋 会议摘要:\n';
+                    meeting.summaries.forEach((summary, i) => {
+                        const relatedText = meeting.items[i] ? meeting.items[i].text.substring(0, 50) + '...' : '（无对应纪要）';
+                        content += `  [摘要 ${i+1}] 📎 ${relatedText}\n`;
+                        content += `      ${summary}\n\n`;
+                    });
+                } else {
+                    content += '\n📋 会议摘要:\n(无摘要)\n';
+                }
+                
+                if (meeting.items && meeting.items.length > 0) {
+                    content += '📝 会议纪要:\n';
+                    meeting.items.forEach((item, i) => {
+                        content += `  [${i+1}] 🕐 ${item.time}\n`;
+                        content += `      ${item.text}\n`;
+                    });
+                } else {
+                    content += '\n📝 会议纪要:\n(无纪要内容)\n';
+                }
+                content += '\n' + '═'.repeat(60) + '\n\n';
+            });
+            
+            content += '  导出完成\n';
+            
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `会议纪要_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            statusBar.textContent = `✅ 已导出 ${selectedMeetings.length} 个会议记录`;
+        }
+        
+        // ============================================================
+        // 39. 初始化
+        // ============================================================
+        window.addEventListener('load', function() {
+            checkApiConnection();
+            checkMicrophone();
+            
+            loadFromLocalStorage();
+            setStatus('idle', '就绪');
+            
+            document.getElementById('recognitionArea').style.display = 'block';
+            manualInputArea.style.display = 'none';
+            actionRow.style.display = 'flex';
+            exportAudioActions.classList.remove('show');
+            
+            if (!isSpeechSupported) {
+                statusBar.textContent = '⚠️ 浏览器不支持语音识别，请使用Chrome浏览器';
+                statusBar.className = 'status-bar error';
+            }
+            
+            if (window.speechSynthesis) {
+                window.speechSynthesis.getVoices();
+            }
+            
+            selectModeBtn.classList.add('btn-outline');
+            deleteSelectedBtn.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

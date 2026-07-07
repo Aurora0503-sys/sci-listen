@@ -1,0 +1,24 @@
+# 🎓 学术会议陪听助手 - Python依赖列表
+
+# Web框架
+flask>=2.0.0
+flask-cors>=3.0.0
+
+# HTTP请求库
+requests>=2.25.0
+
+# 语音识别（可选，用于离线处理）
+# whisper>=1.0.0
+# sounddevice>=0.4.0
+
+# 数据处理
+# numpy>=1.19.0
+
+# 数据库
+# sqlite3 (Python内置，无需安装)
+
+# 开发和测试工具
+pytest>=6.0.0
+
+# 可选：更好的JSON处理
+ujson>=4.0.0

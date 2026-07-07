@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学术会议陪听助手 - 增强版 (支持系统音频)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .header {
+            background-color: #1a73e8;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .left-panel, .right-panel {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .left-panel {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-right: 1px solid #ddd;
+        }
+        
+        .right-panel {
+            flex: 1;
+            background-color: white;
+        }
+        
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #1a73e8;
+            font-weight: bold;
+        }
+        
+        .controls {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .audio-source-selector {
+            margin-bottom: 1rem;
+        }
+        
+        .audio-source-selector select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: white;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            margin: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #1a73e8;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1557b0;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .status-bar {
+            padding: 0.5rem 1rem;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-bottom: 1rem;
+        }
+        
+        .content-box {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .question-item {
+            background-color: #f8f9fa;
+            border-left: 4px solid #1a73e8;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0 4px 4px 0;
+            position: relative;
+        }
+        
+        .question-item button {
+            position: absolute;
+            right: 0.5rem;
+            top: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .api-key-section {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+        }
+        
+        .api-key-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .warning {
+            color: #856404;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+        
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 学术会议陪听助手 - 增强版</h1>
+        <p>支持麦克风和系统音频捕获，智能生成学术问题</p>
+    </div>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="panel-title">🎤 音频控制与实时总结</div>
+            
+            <div class="controls">
+                <div class="audio-source-selector">
+                    <label for="audioSource">选择音频输入源：</label>
+                    <select id="audioSource">
+                        <option value="microphone">🎤 麦克风 (推荐在线会议)</option>
+                        <option value="system">🔊 系统音频 (推荐本地音频)</option>
+                        <option value="both">🎤🔊 混合模式 (麦克风+系统音频)</option>
+                    </select>
+                </div>
+                
+                <button id="startBtn" class="btn-primary">开始录音</button>
+                <button id="stopBtn" class="btn-danger hidden">停止录音</button>
+                <button id="clearBtn" class="btn-secondary">清空内容</button>
+            </div>
+            
+            <div class="status-bar" id="statusBar">状态: 准备就绪</div>
+            
+            <div class="api-key-section">
+                <label for="apiKey">API密钥 (DashScope):</label>
+                <input type="password" id="apiKey" class="api-key-input" placeholder="sk-xxxx...">
+                <div class="warning">💡 提示：系统音频捕获需要屏幕共享权限</div>
+            </div>
+            
+            <div class="content-box">
+                <div id="summaryContent">
+                    <p><em>语音识别内容将实时显示在这里...</em></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel-title">🧠 智能问题生成</div>
+            
+            <div class="controls">
+                <button id="addQuestionBtn" class="btn-primary">手动添加提问</button>
+                <button id="exportBtn" class="btn-secondary">导出内容</button>
+            </div>
+            
+            <div class="content-box" id="questionsBox">
+                <p><em>AI生成的学术问题将显示在这里...</em></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let recognition;
+        let systemAudioStream;
+        let isRecording = false;
+        let summaryText = '';
+        let questionsList = [];
+        
+        const statusBar = document.getElementById('statusBar');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const summaryContent = document.getElementById('summaryContent');
+        const questionsBox = document.getElementById('questionsBox');
+        const apiKeyInput = document.getElementById('apiKey');
+        const audioSourceSelect = document.getElementById('audioSource');
+        
+        // 初始化语音识别
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                statusBar.textContent = '状态: 浏览器不支持语音识别';
+                return false;
+            }
+            
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'zh-CN';
+            
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    summaryText += finalTranscript;
+                    updateSummaryDisplay();
+                    
+                    // 生成AI问题
+                    if (apiKeyInput.value) {
+                        generateAcademicQuestionsWithAI(finalTranscript);
+                    } else {
+                        generateQuestions(finalTranscript);
+                    }
+                }
+                
+                statusBar.textContent = `状态: 正在识别... ${interimTranscript}`;
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('语音识别错误:', event.error);
+                statusBar.textContent = `状态: 识别错误 - ${event.error}`;
+                stopRecording();
+            };
+            
+            recognition.onend = function() {
+                if (isRecording) {
+                    // 自动重启识别
+                    setTimeout(() => {
+                        if (isRecording) {
+                            recognition.start();
+                        }
+                    }, 100);
+                }
+            };
+            
+            return true;
+        }
+        
+        // 获取系统音频流
+        async function getSystemAudioStream() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: false,
+                    audio: {
+                        suppressLocalAudioPlayback: false,
+                        echoCancellation: false,
+                        noiseSuppression: false
+                    }
+                });
+                return stream;
+            } catch (error) {
+                console.error('无法获取系统音频:', error);
+                statusBar.textContent = `状态: 系统音频获取失败 - ${error.message}`;
+                return null;
+            }
+        }
+        
+        // 获取麦克风音频流
+        async function getMicrophoneStream() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 16000
+                    }
+                });
+                return stream;
+            } catch (error) {
+                console.error('无法获取麦克风:', error);
+                statusBar.textContent = `状态: 麦克风获取失败 - ${error.message}`;
+                return null;
+            }
+        }
+        
+        // 开始录音
+        async function startRecording() {
+            const audioSource = audioSourceSelect.value;
+            
+            if (audioSource === 'system' || audioSource === 'both') {
+                statusBar.textContent = '状态: 请在弹出的对话框中选择"分享此标签页音频"';
+                systemAudioStream = await getSystemAudioStream();
+                if (!systemAudioStream) {
+                    return;
+                }
+            }
+            
+            if (audioSource === 'microphone' || audioSource === 'both') {
+                if (!initSpeechRecognition()) {
+                    return;
+                }
+                recognition.start();
+            }
+            
+            isRecording = true;
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            statusBar.textContent = '状态: 正在录音...';
+        }
+        
+        // 停止录音
+        function stopRecording() {
+            isRecording = false;
+            
+            if (recognition) {
+                recognition.stop();
+            }
+            
+            if (systemAudioStream) {
+                systemAudioStream.getTracks().forEach(track => track.stop());
+                systemAudioStream = null;
+            }
+            
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            statusBar.textContent = '状态: 录音已停止';
+        }
+        
+        // 更新总结显示
+        function updateSummaryDisplay() {
+            summaryContent.innerHTML = `
+                <div style="white-space: pre-wrap; line-height: 1.6;">
+                    <strong>📝 实时总结：</strong><br>
+                    ${summaryText || '<em>等待语音输入...</em>'}
+                </div>
+            `;
+        }
+        
+        // 本地问题生成
+        function generateQuestions(text) {
+            const newQuestions = [];
+            const lowerText = text.toLowerCase();
+            
+            if (lowerText.includes('方法') || lowerText.includes('method')) {
+                newQuestions.push('该方法的创新点是什么？理论基础是什么？');
+            }
+            if (lowerText.includes('实验') || lowerText.includes('experiment')) {
+                newQuestions.push('实验设计是否合理？对照组设置是否充分？');
+            }
+            if (lowerText.includes('结果') || lowerText.includes('result')) {
+                newQuestions.push('这些结果是否具有统计显著性？在实际应用中的意义是什么？');
+            }
+            if (lowerText.includes('结论') || lowerText.includes('conclusion')) {
+                newQuestions.push('这个结论是否过于宽泛？还需要哪些验证工作？');
+            }
+            
+            if (newQuestions.length > 0) {
+                const newQuestion = newQuestions[0];
+                if (!questionsList.includes(newQuestion)) {
+                    questionsList.unshift(newQuestion);
+                    if (questionsList.length > 5) {
+                        questionsList.pop();
+                    }
+                }
+            }
+            
+            updateQuestionsDisplay();
+        }
+        
+        // AI问题生成
+        async function generateAcademicQuestionsWithAI(text) {
+            try {
+                statusBar.textContent = '状态: 正在使用AI生成学术问题...';
+                
+                const response = await fetch('http://localhost:5002/api/generate_questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                const aiQuestions = data.questions;
+                
+                if (aiQuestions.length > 0) {
+                    const newQuestion = aiQuestions[0];
+                    if (newQuestion && !questionsList.includes(newQuestion) && newQuestion.length > 3) {
+                        if (questionsList.length >= 5) {
+                            questionsList.pop();
+                        }
+                        questionsList.unshift(newQuestion);
+                    }
+                }
+                
+                updateQuestionsDisplay();
+                statusBar.textContent = '状态: AI问题生成完成';
+                
+            } catch (error) {
+                console.error('AI问题生成失败:', error);
+                statusBar.textContent = `状态: AI生成失败 - ${error.message}`;
+                
+                // 降级到本地生成
+                generateQuestions(text);
+            }
+        }
+        
+        // 更新问题显示
+        function updateQuestionsDisplay() {
+            if (questionsList.length === 0) {
+                questionsBox.innerHTML = '<p><em>AI生成的学术问题将显示在这里...</em></p>';
+                return;
+            }
+            
+            questionsBox.innerHTML = questionsList.map((question, index) => `
+                <div class="question-item">
+                    <strong>Q${index + 1}:</strong> ${question}
+                    <button onclick="deleteQuestion(${index})" class="btn-danger">删除</button>
+                </div>
+            `).join('');
+        }
+        
+        // 删除问题
+        function deleteQuestion(index) {
+            questionsList.splice(index, 1);
+            updateQuestionsDisplay();
+        }
+        
+        // 清空所有内容
+        function clearAll() {
+            summaryText = '';
+            questionsList = [];
+            updateSummaryDisplay();
+            updateQuestionsDisplay();
+            statusBar.textContent = '状态: 内容已清空';
+        }
+        
+        // 手动添加问题
+        function addManualQuestion() {
+            const question = prompt('请输入你的问题：');
+            if (question && question.trim()) {
+                questionsList.unshift(question.trim());
+                if (questionsList.length > 10) {
+                    questionsList.pop();
+                }
+                updateQuestionsDisplay();
+            }
+        }
+        
+        // 导出内容
+        function exportContent() {
+            const content = `学术会议记录\n${'='.repeat(30)}\n\n时间：${new Date().toLocaleString()}\n\n实时总结：\n${summaryText}\n\n生成的问题：\n${questionsList.map((q, i) => `${i + 1}. ${q}`).join('\n')}`;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `学术会议记录_${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // 事件监听器
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+        clearBtn.addEventListener('click', clearAll);
+        document.getElementById('addQuestionBtn').addEventListener('click', addManualQuestion);
+        document.getElementById('exportBtn').addEventListener('click', exportContent);
+        
+        // 音频源选择变化时提示
+        audioSourceSelect.addEventListener('change', function() {
+            const value = this.value;
+            let message = '';
+            
+            switch(value) {
+                case 'microphone':
+                    message = '💡 提示：将捕获麦克风音频，适合在线会议';
+                    break;
+                case 'system':
+                    message = '⚠️ 注意：需要屏幕共享权限来捕获系统音频';
+                    break;
+                case 'both':
+                    message = '⚠️ 注意：将同时捕获麦克风和系统音频';
+                    break;
+            }
+            
+            const warning = document.querySelector('.warning');
+            warning.textContent = message;
+        });
+        
+        // 初始化
+        statusBar.textContent = '状态: 准备就绪，请选择音频输入源';
+    </script>
+</body>
+</html>
