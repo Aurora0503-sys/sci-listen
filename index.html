@@ -1037,9 +1037,9 @@
             <div id="connectionError" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:12px; color:#856404; flex-shrink:0;">
                 <div style="font-weight:600; font-size:0.95rem;">⚠️ 无法连接到后端服务</div>
                 <ul style="margin:8px 0 0 20px; font-size:0.85rem; line-height:1.8;">
-                    <li>请确保后端服务已启动：在 <code>api</code> 目录下运行 <code>python working_api.py</code></li>
-                    <li>请使用 <code>http://localhost:8080</code> 访问，不要直接打开文件</li>
-                    <li>检查后端服务是否运行在 <code>http://localhost:5002</code></li>
+                    <li>请确保后端服务已启动</li>
+                    <li>检查网络连接</li>
+                    <li>刷新页面重试</li>
                 </ul>
                 <button onclick="checkApiConnection()" style="margin-top:8px; padding:4px 16px; background:#ffc107; border:none; border-radius:4px; cursor:pointer; font-weight:500;">🔄 重新连接</button>
             </div>
@@ -1184,9 +1184,9 @@
 
     <script>
         // ============================================================
-        // 0. 配置
+        // 0. 配置 - 改为你的 Railway 域名
         // ============================================================
-        const API_BASE_URL = 'http://localhost:5002';
+        const API_BASE_URL = 'https://sci-listen.up.railway.app';
         let isApiHealthy = false;
         let isMicAvailable = false;
         let isSelectMode = false;
@@ -1352,7 +1352,7 @@
             checkApi.innerHTML = '<span style="font-size:1rem;">⏳</span> <span style="color:#555;font-size:0.8rem;">后端服务检查中...</span>';
             
             try {
-                const response = await fetch(`${API_BASE_URL}/health`, {
+                const response = await fetch(`${API_BASE_URL}/api/health`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(5000)
                 });
@@ -1616,7 +1616,7 @@
                 id: Date.now(),
                 title: title || `会议 ${meetings.length + 1}`,
                 time: getCurrentTime(),
-                summaries: [],  // 摘要列表：每个摘要对应一条纪要
+                summaries: [],
                 items: []
             };
             meetings.push(newMeeting);
@@ -1671,7 +1671,7 @@
             const meeting = meetings.find(m => m.id === meetingId);
             if (!meeting) return;
             
-            if (!confirm(`确定要删除会议"${meeting.title}"及其所有内容吗？\n（包括 ${meeting.items.length} 条会议纪要和 ${meeting.summaries.length} 条摘要）`)) {
+            if (!confirm(`确定要删除会议"${meeting.title}"及其所有内容吗？`)) {
                 return;
             }
             
@@ -1752,7 +1752,7 @@
         }
         
         // ============================================================
-        // 15. 删除选中的纪要（同时删除对应的摘要）
+        // 15. 删除选中的纪要
         // ============================================================
         function deleteSelectedItems() {
             const checkedBoxes = document.querySelectorAll('.summary-item .item-checkbox input[type="checkbox"]:checked');
@@ -1779,7 +1779,6 @@
             
             indices.forEach(idx => {
                 meeting.items.splice(idx, 1);
-                // 同时删除对应的摘要（如果存在）
                 if (meeting.summaries && meeting.summaries.length > idx) {
                     meeting.summaries.splice(idx, 1);
                 }
@@ -1891,7 +1890,7 @@
         }
         
         // ============================================================
-        // 19. 删除单条纪要（同时删除对应的摘要）
+        // 19. 删除单条纪要
         // ============================================================
         function removeSingleSummaryItem(index) {
             const meeting = meetings.find(m => m.id === currentMeetingId);
@@ -1918,7 +1917,7 @@
         }
         
         // ============================================================
-        // 20. 更新会议摘要显示（显示所有摘要）
+        // 20. 更新会议摘要显示
         // ============================================================
         function updateQuestionsDisplay() {
             const meeting = meetings.find(m => m.id === currentMeetingId);
@@ -1930,7 +1929,6 @@
             
             let html = '';
             meeting.summaries.forEach((summary, index) => {
-                // 如果有对应的纪要，显示关联信息
                 const relatedText = meeting.items[index] ? meeting.items[index].text.substring(0, 30) + '...' : '（已删除）';
                 const formattedText = summary.replace(/\n/g, '<br>');
                 const plainText = summary.replace(/\n/g, '。');
@@ -2116,18 +2114,15 @@
             const meeting = meetings.find(m => m.id === currentMeetingId);
             if (!meeting) return false;
             
-            // 确保 summaries 数组存在
             if (!meeting.summaries) {
                 meeting.summaries = [];
             }
             
-            // 如果正在编辑模式，覆盖原来的条目
             if (editingItemIndex !== null && editingItemIndex < meeting.items.length) {
                 meeting.items[editingItemIndex] = {
                     time: getCurrentTime(),
                     text: text
                 };
-                // 注意：编辑纪要时，对应的摘要不会被自动删除，但用户需要重新生成
                 statusBar.textContent = `✅ 已更新会议纪要（第 ${editingItemIndex + 1} 条）`;
             } else {
                 meeting.items.push({
@@ -2145,7 +2140,7 @@
         }
         
         // ============================================================
-        // 28. 生成会议摘要（为当前编辑或新添加的纪要生成摘要）
+        // 28. 生成会议摘要
         // ============================================================
         async function generateOrUpdateSummary(text, source) {
             if (!ensureCurrentMeeting()) return false;
@@ -2160,24 +2155,19 @@
             const meeting = meetings.find(m => m.id === currentMeetingId);
             if (!meeting) return false;
             
-            // 确保 summaries 数组存在
             if (!meeting.summaries) {
                 meeting.summaries = [];
             }
             
-            // 确定要操作的索引：如果是编辑模式，使用编辑的索引；否则使用新增的索引
             let targetIndex = editingItemIndex;
             
-            // 如果不是编辑模式，先添加纪要
             if (editingItemIndex === null || editingItemIndex >= meeting.items.length) {
-                // 添加新纪要
                 meeting.items.push({
                     time: getCurrentTime(),
                     text: text
                 });
                 targetIndex = meeting.items.length - 1;
             } else {
-                // 编辑模式：更新纪要内容
                 meeting.items[editingItemIndex] = {
                     time: getCurrentTime(),
                     text: text
@@ -2197,14 +2187,10 @@
                 if (data.questions && data.questions.length > 0) {
                     const fullSummary = data.questions.join('\n\n---\n\n');
                     
-                    // 在对应位置添加或更新摘要
                     if (targetIndex < meeting.summaries.length) {
-                        // 更新已有的摘要
                         meeting.summaries[targetIndex] = fullSummary;
                         statusBar.textContent = `✅ 已更新第 ${targetIndex + 1} 条纪要的摘要`;
                     } else {
-                        // 新增摘要
-                        // 确保数组长度足够
                         while (meeting.summaries.length < targetIndex) {
                             meeting.summaries.push('');
                         }
@@ -2461,7 +2447,7 @@
         }
         
         // ============================================================
-        // 32. 生成会议摘要（统一处理）
+        // 32. 生成会议摘要
         // ============================================================
         generateFromRecognitionBtn.addEventListener('click', async function() {
             const text = getCurrentInputText();
@@ -2572,7 +2558,7 @@
         });
         
         // ============================================================
-        // 36. 手动添加摘要（为当前会议添加独立摘要，不关联纪要）
+        // 36. 手动添加摘要
         // ============================================================
         addQuestionBtn.addEventListener('click', function() {
             if (!ensureCurrentMeeting()) return;
