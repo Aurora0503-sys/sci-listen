@@ -135,21 +135,12 @@ def generate_meeting_summary(text):
 @app.route('/')
 def index():
     """根路径 - 返回前端页面"""
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>智能会议助手</title>
-    </head>
-    <body>
-        <h1>💼 智能会议助手</h1>
-        <p>✅ API 服务器运行正常</p>
-        <p>📡 端点: /api/generate_questions, /api/answer_question, /api/health</p>
-        <p>📖 请访问 <a href="/api/health">/api/health</a> 查看状态</p>
-    </body>
-    </html>
-    """, 200  # 显式返回 200 状态码
+    try:
+        # 获取当前文件所在目录的父目录（即项目根目录）
+        app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return send_from_directory(app_dir, 'index.html')
+    except Exception as e:
+        return f"<h1>404</h1><p>无法加载 index.html: {str(e)}</p>", 404
 
 
 @app.route('/api/generate_questions', methods=['POST'])
