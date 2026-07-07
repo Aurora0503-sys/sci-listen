@@ -136,9 +136,9 @@ def generate_meeting_summary(text):
 def index():
     """根路径 - 返回 index.html 前端页面"""
     try:
-        # 获取当前文件所在目录的绝对路径
-        app_dir = os.path.dirname(os.path.abspath(__file__))
-        return send_from_directory(app_dir, 'index.html')
+        # 直接用 open 读取文件
+        with open('index.html', 'r', encoding='utf-8') as f:
+            return f.read()
     except Exception as e:
         return jsonify({
             'message': '智能会议助手 API 运行正常',
