@@ -267,6 +267,8 @@ def health_check():
 
 
 if __name__ == '__main__':
+    # Vercel 需要这个变量
+    app = app
     print("🚀 启动会议摘要API服务器（DeepSeek版）")
     print(f"🔑 API Key: {DEEPSEEK_API_KEY[:8]}...{DEEPSEEK_API_KEY[-4:]}")
     print("📡 摘要端点: http://localhost:5002/api/generate_questions")
