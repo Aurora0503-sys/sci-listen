@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
 import os
@@ -132,6 +132,25 @@ def generate_meeting_summary(text):
         return [f"生成失败: {str(e)}"]
 
 
+@app.route('/')
+def index():
+    """根路径 - 返回前端页面"""
+    try:
+        # 尝试从 web 目录返回 index.html
+        return send_from_directory('../web', 'index.html')
+    except Exception as e:
+        # 如果失败，返回 JSON 提示
+        return jsonify({
+            'message': '智能会议助手 API 运行正常',
+            'endpoints': [
+                '/api/generate_questions',
+                '/api/answer_question',
+                '/api/health'
+            ],
+            'note': '请访问 /web/index.html 查看前端页面'
+        })
+
+
 @app.route('/api/generate_questions', methods=['POST'])
 def generate_questions():
     """API端点：生成会议摘要"""
@@ -256,13 +275,13 @@ def answer_question():
         return jsonify({'error': error_msg}), 500
 
 
-@app.route('/health', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
 def health_check():
     """健康检查端点"""
     return jsonify({
         'status': 'healthy',
         'message': 'API服务器运行正常（会议摘要模式）',
-        'endpoints': ['/api/generate_questions', '/api/answer_question']
+        'endpoints': ['/api/generate_questions', '/api/answer_question', '/api/health']
     }), 200
 
 
@@ -278,5 +297,6 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=5002, debug=False)
     except Exception as e:
         print(f"❌ 启动失败: {e}")
-# 在文件末尾添加这行，确保 Vercel/Railway 能找到 app
+
+# ===== Vercel/Railway 需要这个 =====
 app = app
