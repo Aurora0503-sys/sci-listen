@@ -136,10 +136,9 @@ def generate_meeting_summary(text):
 def index():
     """根路径 - 返回前端页面"""
     try:
-        # 尝试从 web 目录返回 index.html
-        return send_from_directory('../web', 'index.html')
+        # 尝试从根目录返回 index.html
+        return send_from_directory('.', 'index.html')
     except Exception as e:
-        # 如果失败，返回 JSON 提示
         return jsonify({
             'message': '智能会议助手 API 运行正常',
             'endpoints': [
@@ -147,7 +146,7 @@ def index():
                 '/api/answer_question',
                 '/api/health'
             ],
-            'note': '请访问 /web/index.html 查看前端页面'
+            'note': '请访问 /api/health 查看 API 状态'
         })
 
 
