@@ -10,10 +10,6 @@
     {
       "src": "/api/(.*)",
       "dest": "api/working_api.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
     }
   ]
 }
