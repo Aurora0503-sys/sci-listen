@@ -3,7 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "d /app && gunicorn --timeout 120 --bind 0.0.0.0:$PORT api.working_api:app",
+    "startCommand": "cd /app && gunicorn --timeout 120 --bind 0.0.0.0:$PORT api.working_api:app",
     "healthcheckPath": "/api/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
